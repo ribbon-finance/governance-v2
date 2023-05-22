@@ -1,0 +1,205 @@
+import { expect } from "chai";
+import hre, { ethers } from "hardhat";
+import { BigNumber, Contract, ContractFactory, Signer } from "ethers";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { NULL_ADDR, RBN_ADDR } from "../constants/constants";
+import { assert } from "./helpers/assertions";
+const { parseEther } = ethers.utils;
+
+const { TOKEN_PARAMS } = require("../params");
+
+describe("AevoToken contract", function () {
+  let AevoToken: ContractFactory;
+  let Migrator: ContractFactory;
+  let aevoToken: Contract;
+  let rbnToken: Contract;
+  let migrator: Contract;
+  let owner: SignerWithAddress;
+  let user: string;
+  let userSigner: Signer;
+  let beneficiarySigner: Signer;
+  let RBN_AEVO_RATIO: BigNumber;
+  let RATIO_MULTIPLIER: BigNumber;
+  let aevoMaxSupply: BigNumber;
+
+  beforeEach(async function () {
+    AevoToken = await ethers.getContractFactory("AevoToken");
+    [owner] = await ethers.getSigners();
+
+    // deploy AEVO token
+    aevoToken = await AevoToken.deploy(
+      TOKEN_PARAMS.NAME,
+      TOKEN_PARAMS.SYMBOL,
+      TOKEN_PARAMS.BENEFICIARY
+    );
+
+    // set transfers allowed to true
+    await hre.network.provider.request({
+      method: "hardhat_impersonateAccount",
+      params: [TOKEN_PARAMS.BENEFICIARY],
+    });
+
+    beneficiarySigner = await ethers.provider.getSigner(
+      TOKEN_PARAMS.BENEFICIARY
+    );
+
+    await aevoToken.connect(beneficiarySigner).setTransfersAllowed(true);
+
+    // deploy migrator contract
+    Migrator = await ethers.getContractFactory("RbnToAevoMigrator");
+    migrator = await Migrator.deploy(RBN_ADDR, aevoToken.address);
+
+    // owner mints the total AEVO supply to migrator address
+    aevoMaxSupply = parseEther("100000000"); // 100M AEVO tokens
+    RBN_AEVO_RATIO = BigNumber.from("1000"); // 1000M RBN / 100M AEVO = 10.00
+    RATIO_MULTIPLIER = BigNumber.from("100");
+
+    await aevoToken
+      .connect(beneficiarySigner)
+      .mint(migrator.address, aevoMaxSupply);
+
+    // set up user
+    user = "0xaddfB9a442a32225d866ffdB983AaB115199e662";
+    await hre.network.provider.request({
+      method: "hardhat_impersonateAccount",
+      params: [user],
+    });
+    userSigner = await ethers.provider.getSigner(user);
+
+    // set up RBN contract
+    rbnToken = await ethers.getContractAt("IERC20", RBN_ADDR);
+  });
+
+  describe("#constructor", function () {
+    it("reverts if RBN address is 0", async function () {
+      const TestMigrator = await ethers.getContractFactory("RbnToAevoMigrator");
+
+      await expect(
+        TestMigrator.deploy(NULL_ADDR, aevoToken.address)
+      ).to.be.revertedWith("!_rbn");
+    });
+    it("reverts if AEVO address is 0", async function () {
+      const TestMigrator = await ethers.getContractFactory("RbnToAevoMigrator");
+
+      await expect(TestMigrator.deploy(RBN_ADDR, NULL_ADDR)).to.be.revertedWith(
+        "!_aevo"
+      );
+    });
+    it("successfully sets the constructor", async function () {
+      assert.equal(await migrator.RBN(), RBN_ADDR);
+      assert.equal(await migrator.AEVO(), aevoToken.address);
+      assert.bnEqual(await migrator.RBN_AEVO_RATIO(), RBN_AEVO_RATIO);
+    });
+  });
+
+  describe("#migrateToAEVO", function () {
+    it("reverts if amount is lower than the minimum migrateable value", async function () {
+      await expect(
+        migrator.migrateToAEVO(BigNumber.from("1"))
+      ).to.be.revertedWith("!_amount");
+    });
+    it("user successfully migrates 1 RBN token", async function () {
+      const migratorAEVOBalBefore = await aevoToken.balanceOf(migrator.address);
+      const rbnContractBalBefore = await rbnToken.balanceOf(rbnToken.address);
+      const userRBNBalBefore = await rbnToken.balanceOf(user);
+      const userAEVOBalBefore = await aevoToken.balanceOf(user);
+
+      assert.bnEqual(migratorAEVOBalBefore, aevoMaxSupply);
+
+      // user migrates 1 RBN token
+      const migrateAmount = parseEther("1");
+      await rbnToken
+        .connect(userSigner)
+        .approve(migrator.address, migrateAmount);
+
+      const tx = await migrator
+        .connect(userSigner)
+        .migrateToAEVO(migrateAmount);
+
+      const migratorAEVOBalAfter = await aevoToken.balanceOf(migrator.address);
+      const rbnContractBalAfter = await rbnToken.balanceOf(rbnToken.address);
+      const userRBNBalAfter = await rbnToken.balanceOf(user);
+      const userAEVOBalAfter = await aevoToken.balanceOf(user);
+
+      // AEVO flows
+      assert.bnEqual(
+        migratorAEVOBalBefore.sub(migratorAEVOBalAfter),
+        migrateAmount.mul(RATIO_MULTIPLIER).div(RBN_AEVO_RATIO)
+      );
+      assert.bnEqual(
+        userAEVOBalAfter.sub(userAEVOBalBefore),
+        migrateAmount.mul(RATIO_MULTIPLIER).div(RBN_AEVO_RATIO)
+      );
+
+      // RBN flows
+      assert.bnEqual(
+        rbnContractBalAfter.sub(rbnContractBalBefore),
+        migrateAmount
+      );
+      assert.bnEqual(userRBNBalBefore.sub(userRBNBalAfter), migrateAmount);
+
+      // emits event
+      await expect(tx).to.emit(migrator, "Migrated").withArgs(migrateAmount);
+    });
+  });
+
+  describe("#rescue", function () {
+    it("user calls rescue without any RBN in the contract and no changes occur", async function () {
+      const migratorRBNBalBefore = await rbnToken.balanceOf(migrator.address);
+      const ownerRBNBalBefore = await rbnToken.balanceOf(owner.address);
+
+      // user calls rescue
+      const tx = await migrator.connect(userSigner).rescue();
+
+      const ownerRBNBalAfter = await rbnToken.balanceOf(owner.address);
+      const migratorRBNBalAfter = await rbnToken.balanceOf(migrator.address);
+
+      assert.equal(ownerRBNBalAfter.sub(ownerRBNBalBefore), 0);
+      assert.equal(migratorRBNBalAfter.sub(migratorRBNBalBefore), 0);
+
+      // emits event
+      await expect(tx).to.emit(migrator, "Rescued").withArgs(0);
+    });
+    it("user calls rescue and successfully moves the RBN tokens to the owner after accidentally sending them to contract", async function () {
+      const userRBNBalBefore = await rbnToken.balanceOf(user);
+      const migratorRBNBalBefore = await rbnToken.balanceOf(migrator.address);
+      const ownerRBNBalBefore = await rbnToken.balanceOf(owner.address);
+
+      // acidentally user sends RBN to contract
+      const accidentalAmount = BigNumber.from("10000").mul(
+        BigNumber.from("10").pow(18)
+      );
+      await rbnToken
+        .connect(userSigner)
+        .transfer(migrator.address, accidentalAmount);
+
+      const userRBNBalPostAccident = await rbnToken.balanceOf(user);
+      const migratorRBNBalPostAccident = await rbnToken.balanceOf(
+        migrator.address
+      );
+
+      // user calls rescue
+      const tx = await migrator.connect(userSigner).rescue();
+
+      const ownerRBNBalAfter = await rbnToken.balanceOf(owner.address);
+      const migratorRBNBalAfter = await rbnToken.balanceOf(migrator.address);
+
+      assert.bnEqual(ownerRBNBalAfter.sub(ownerRBNBalBefore), accidentalAmount);
+      assert.bnEqual(
+        migratorRBNBalPostAccident.sub(migratorRBNBalBefore),
+        accidentalAmount
+      );
+      assert.bnEqual(
+        migratorRBNBalPostAccident.sub(migratorRBNBalAfter),
+        accidentalAmount
+      );
+      assert.bnEqual(
+        userRBNBalBefore.sub(userRBNBalPostAccident),
+        accidentalAmount
+      );
+
+      // emits event
+      await expect(tx).to.emit(migrator, "Rescued").withArgs(accidentalAmount);
+    });
+  });
+});
