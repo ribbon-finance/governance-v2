@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "repository": "https://github.com/ribbon-finance/governance-v2.git",
-  "author": "Your Name <jacob4seinfeld@gmail.com>",
+  "author": "",
   "license": "MIT",
   "devDependencies": {
     "@ethersproject/abi": "^5.4.7",
