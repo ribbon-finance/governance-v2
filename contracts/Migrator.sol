@@ -15,13 +15,6 @@ contract RbnToAevoMigrator is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     /************************************************
-     * CONSTANTS
-     ***********************************************/
-
-    ///@notice multiplier for ratio calculations
-    uint256 internal constant RATIO_MULTIPLIER = 10**2;
-
-    /************************************************
      * INTERFACES
      ***********************************************/
 
@@ -42,13 +35,6 @@ contract RbnToAevoMigrator is Ownable, ReentrancyGuard {
     event Rescued(uint256 amount);
 
     /************************************************
-     *  STORAGE
-     ***********************************************/
-
-    ///@notice ratio of RBN supply divided by AEVO supply (with 2 decimals - eg. 10.55 = 1055)
-    uint256 public immutable RBN_AEVO_RATIO;
-
-    /************************************************
      *  CONSTRUCTOR
      ***********************************************/
 
@@ -63,7 +49,6 @@ contract RbnToAevoMigrator is Ownable, ReentrancyGuard {
 
         RBN = _rbn;
         AEVO = _aevo;
-        RBN_AEVO_RATIO = 1000; // 10.00 - selected ratio
     }
 
     /************************************************
@@ -72,18 +57,16 @@ contract RbnToAevoMigrator is Ownable, ReentrancyGuard {
 
     /**
      * @notice migrates RBN tokens to AEVO tokens
+     *         migration assumes a 1:1 ratio between RBN and AEVO supply
      * @param _amount amount of RBN tokens to migrate
      */
     function migrateToAEVO(uint256 _amount) external nonReentrant {
-        require(_amount * RATIO_MULTIPLIER >= RBN_AEVO_RATIO, "!_amount");
+        require(_amount > 0, "!_amount");
 
         // An approve() by the msg.sender is required beforehand
         RBN.safeTransferFrom(msg.sender, address(RBN), _amount);
 
-        AEVO.safeTransfer(
-            msg.sender,
-            (_amount * RATIO_MULTIPLIER) / RBN_AEVO_RATIO
-        );
+        AEVO.safeTransfer(msg.sender, _amount);
 
         emit Migrated(_amount);
     }
@@ -91,7 +74,7 @@ contract RbnToAevoMigrator is Ownable, ReentrancyGuard {
     /**
      * @notice sends migrator's contract RBN balance to its owner
      *         to be used in case RBN holders accidentally send RBN
-     *         to this contract instead of calling migrateToAEVO function
+     *         to this contract instead of calling the migration functions
      */
     function rescue() external nonReentrant {
         uint256 amount = RBN.balanceOf(address(this));

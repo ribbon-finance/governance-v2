@@ -18,8 +18,6 @@ describe("AevoToken contract", function () {
   let user: string;
   let userSigner: Signer;
   let beneficiarySigner: Signer;
-  let RBN_AEVO_RATIO: BigNumber;
-  let RATIO_MULTIPLIER: BigNumber;
   let aevoMaxSupply: BigNumber;
 
   beforeEach(async function () {
@@ -50,9 +48,7 @@ describe("AevoToken contract", function () {
     migrator = await Migrator.deploy(RBN_ADDR, aevoToken.address);
 
     // owner mints the total AEVO supply to migrator address
-    aevoMaxSupply = parseEther("100000000"); // 100M AEVO tokens
-    RBN_AEVO_RATIO = BigNumber.from("1000"); // 1000M RBN / 100M AEVO = 10.00
-    RATIO_MULTIPLIER = BigNumber.from("100");
+    aevoMaxSupply = parseEther("1000000000"); // 1000M AEVO tokens - same as RBN supply
 
     await aevoToken
       .connect(beneficiarySigner)
@@ -88,15 +84,12 @@ describe("AevoToken contract", function () {
     it("successfully sets the constructor", async function () {
       assert.equal(await migrator.RBN(), RBN_ADDR);
       assert.equal(await migrator.AEVO(), aevoToken.address);
-      assert.bnEqual(await migrator.RBN_AEVO_RATIO(), RBN_AEVO_RATIO);
     });
   });
 
   describe("#migrateToAEVO", function () {
-    it("reverts if amount is lower than the minimum migrateable value", async function () {
-      await expect(
-        migrator.migrateToAEVO(BigNumber.from("1"))
-      ).to.be.revertedWith("!_amount");
+    it("reverts if amount is 0", async function () {
+      await expect(migrator.migrateToAEVO(0)).to.be.revertedWith("!_amount");
     });
     it("user successfully migrates 1 RBN token", async function () {
       const migratorAEVOBalBefore = await aevoToken.balanceOf(migrator.address);
@@ -124,12 +117,9 @@ describe("AevoToken contract", function () {
       // AEVO flows
       assert.bnEqual(
         migratorAEVOBalBefore.sub(migratorAEVOBalAfter),
-        migrateAmount.mul(RATIO_MULTIPLIER).div(RBN_AEVO_RATIO)
+        migrateAmount
       );
-      assert.bnEqual(
-        userAEVOBalAfter.sub(userAEVOBalBefore),
-        migrateAmount.mul(RATIO_MULTIPLIER).div(RBN_AEVO_RATIO)
-      );
+      assert.bnEqual(userAEVOBalAfter.sub(userAEVOBalBefore), migrateAmount);
 
       // RBN flows
       assert.bnEqual(
