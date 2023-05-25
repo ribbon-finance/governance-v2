@@ -91,11 +91,6 @@ describe("AevoToken contract", function () {
     it("reverts if amount is 0", async function () {
       await expect(migrator.migrateToAEVO(0)).to.be.revertedWith("!_amount");
     });
-    it("reverts if amount is higher than AEVO contract balance", async function () {
-      await expect(
-        migrator.migrateToAEVO(aevoMaxSupply.add(1))
-      ).to.be.revertedWith("!_aevoAmount");
-    });
     it("user successfully migrates 1 RBN token", async function () {
       const migratorAEVOBalBefore = await aevoToken.balanceOf(migrator.address);
       const rbnContractBalBefore = await rbnToken.balanceOf(rbnToken.address);

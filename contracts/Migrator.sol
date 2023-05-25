@@ -62,7 +62,6 @@ contract RbnToAevoMigrator is Ownable, ReentrancyGuard {
      */
     function migrateToAEVO(uint256 _amount) external nonReentrant {
         require(_amount > 0, "!_amount");
-        require(_amount <= AEVO.balanceOf(address(this)), "!_aevoAmount");
 
         // An approve() by the msg.sender is required beforehand
         RBN.safeTransferFrom(msg.sender, address(RBN), _amount);
