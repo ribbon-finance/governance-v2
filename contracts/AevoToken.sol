@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.18;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 
 /**
  * AEVO: STRUCTURED PRODUCTS FOR THE PEOPLE
  */
-contract Aevo is AccessControl, ERC20 {
+contract Aevo is AccessControl, ERC20Permit {
     /// @dev The identifier of the role which maintains other roles.
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN");
     /// @dev The identifier of the role which allows accounts to mint tokens.
@@ -17,7 +17,7 @@ contract Aevo is AccessControl, ERC20 {
         string memory name,
         string memory symbol,
         address beneficiary
-    ) ERC20(name, symbol) {
+    ) ERC20Permit(name) ERC20(name, symbol) {
         // Add beneficiary as minter
         _setupRole(MINTER_ROLE, beneficiary);
         // Add beneficiary as admin

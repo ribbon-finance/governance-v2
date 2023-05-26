@@ -1,7 +1,8 @@
 import { expect } from "chai";
 import hre, { ethers } from "hardhat";
-import { BigNumber, Contract, ContractFactory } from "ethers";
+import { BigNumber, Contract, ContractFactory, Wallet } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import { generateWallet, getPermitSignature } from "./helpers/utils";
 
 const { TOKEN_PARAMS } = require("../params");
 
@@ -262,6 +263,62 @@ describe("Aevo contract", function () {
 
       const addr2Balance = await aevoToken.balanceOf(addr2.address);
       expect(addr2Balance).to.equal(toTransfer2);
+    });
+
+    it("Should transfer tokens using permit", async function () {
+      const deadline = ethers.constants.MaxUint256;
+      const permitAmount = BigNumber.from("50");
+
+      // mint 50 tokens to address 1 to make the transfer using permit
+      await withSigner.mint(addr1.address, permitAmount);
+
+      // set up address 1 permit
+      let addr1Wallet: Wallet = await generateWallet(
+        aevoToken,
+        permitAmount,
+        addr1
+      );
+
+      const { v, r, s } = await getPermitSignature(
+        addr1Wallet,
+        aevoToken,
+        addr2.address,
+        permitAmount,
+        deadline,
+        {
+          nonce: BigNumber.from("0"),
+          name: TOKEN_PARAMS.NAME,
+          chainId: 1,
+          version: "1",
+        }
+      );
+
+      // address 2 calls permit
+      await aevoToken
+        .connect(addr2)
+        .permit(
+          addr1Wallet.address,
+          addr2.address,
+          permitAmount,
+          deadline,
+          v,
+          r,
+          s
+        );
+
+      const addr1BalBefore = await aevoToken.balanceOf(addr1Wallet.address);
+      const addr2BalBefore = await aevoToken.balanceOf(addr2.address);
+
+      // address 2 transfers funds from address 1 to itself
+      await aevoToken
+        .connect(addr2)
+        .transferFrom(addr1Wallet.address, addr2.address, permitAmount);
+
+      const addr1BalAfter = await aevoToken.balanceOf(addr1Wallet.address);
+      const addr2BalAfter = await aevoToken.balanceOf(addr2.address);
+
+      expect(addr2BalAfter.sub(addr2BalBefore)).to.equal(permitAmount);
+      expect(addr1BalBefore.sub(addr1BalAfter)).to.equal(permitAmount);
     });
   });
 });
