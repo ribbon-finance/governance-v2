@@ -11,7 +11,7 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.
  * @notice This contract implements the migration from RBN to AEVO token
  * @author Aevo team
  */
-contract Migrator is Ownable, ReentrancyGuard {
+contract Migrator is Ownable {
     using SafeERC20 for IERC20;
 
     /************************************************
@@ -60,7 +60,7 @@ contract Migrator is Ownable, ReentrancyGuard {
      *         migration assumes a 1:1 ratio between RBN and AEVO supply
      * @param _amount amount of RBN tokens to migrate
      */
-    function migrateToAEVO(uint256 _amount) external nonReentrant {
+    function migrateToAEVO(uint256 _amount) external {
         require(_amount > 0, "!_amount");
 
         // An approve() by the msg.sender is required beforehand
@@ -76,7 +76,7 @@ contract Migrator is Ownable, ReentrancyGuard {
      *         to be used in case RBN holders accidentally send RBN
      *         to this contract instead of calling the migration functions
      */
-    function rescue() external nonReentrant {
+    function rescue() external {
         uint256 amount = RBN.balanceOf(address(this));
 
         RBN.safeTransfer(owner(), amount);
