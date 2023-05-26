@@ -6,7 +6,7 @@ async function main() {
   const network = hre.network.name;
 
   // We get the contract to deploy
-  const AevoToken = await hre.ethers.getContractFactory("AevoToken", deployer);
+  const AevoToken = await hre.ethers.getContractFactory("Aevo", deployer);
 
   // Use a different name for obfuscation just in case anyone's watching
   const name = network === "goerli" || network === "sepolia" ? "TestToken" : TOKEN_PARAMS.NAME;
