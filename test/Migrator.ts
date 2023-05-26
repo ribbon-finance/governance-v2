@@ -8,7 +8,7 @@ const { parseEther } = ethers.utils;
 
 const { TOKEN_PARAMS } = require("../params");
 
-describe("AevoToken contract", function () {
+describe("Migrator", function () {
   let AevoToken: ContractFactory;
   let Migrator: ContractFactory;
   let aevoToken: Contract;
@@ -21,7 +21,7 @@ describe("AevoToken contract", function () {
   let aevoMaxSupply: BigNumber;
 
   beforeEach(async function () {
-    AevoToken = await ethers.getContractFactory("AevoToken");
+    AevoToken = await ethers.getContractFactory("Aevo");
     [owner] = await ethers.getSigners();
 
     // deploy AEVO token

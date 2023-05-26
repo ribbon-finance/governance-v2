@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 /**
  * AEVO: STRUCTURED PRODUCTS FOR THE PEOPLE
  */
-contract AevoToken is AccessControl, ERC20 {
+contract Aevo is AccessControl, ERC20 {
     /// @dev Emitted when transfer toggle is switched
     event TransfersAllowed(bool transfersAllowed);
 

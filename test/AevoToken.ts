@@ -5,7 +5,7 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 const { TOKEN_PARAMS } = require("../params");
 
-describe("AevoToken contract", function () {
+describe("Aevo contract", function () {
   let AevoToken: ContractFactory;
   let aevoToken: Contract;
   let owner: SignerWithAddress;
@@ -15,7 +15,7 @@ describe("AevoToken contract", function () {
 
   beforeEach(async function () {
     // Get the ContractFactory and Signers here
-    AevoToken = await ethers.getContractFactory("AevoToken");
+    AevoToken = await ethers.getContractFactory("Aevo");
     [owner, addr1, addr2] = await ethers.getSigners();
 
     aevoToken = await AevoToken.deploy(
@@ -37,7 +37,7 @@ describe("AevoToken contract", function () {
       params: [TOKEN_PARAMS.BENEFICIARY],
     });
     const signer = await ethers.provider.getSigner(TOKEN_PARAMS.BENEFICIARY);
-    let token = await ethers.getContractAt("AevoToken", aevoToken.address);
+    let token = await ethers.getContractAt("Aevo", aevoToken.address);
     withSigner = await token.connect(signer);
   });
 
