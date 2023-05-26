@@ -73,7 +73,7 @@ contract Migrator is Ownable {
     /**
      * @notice sends migrator's contract RBN balance to its owner
      *         to be used in case RBN holders accidentally send RBN
-     *         to this contract instead of calling the migration functions
+     *         to this contract instead of calling migrateToAEVO()
      */
     function rescue() external {
         uint256 amount = RBN.balanceOf(address(this));
