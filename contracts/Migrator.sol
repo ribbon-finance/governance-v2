@@ -56,8 +56,7 @@ contract Migrator is Ownable {
      ***********************************************/
 
     /**
-     * @notice migrates RBN tokens to AEVO tokens
-     *         migration assumes a 1:1 ratio between RBN and AEVO supply
+     * @notice migrates RBN to AEVO with a 1:1 ratio
      * @param _amount amount of RBN tokens to migrate
      */
     function migrateToAEVO(uint256 _amount) external {
