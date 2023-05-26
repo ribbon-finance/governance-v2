@@ -44,7 +44,7 @@ describe("Migrator", function () {
     await aevoToken.connect(beneficiarySigner).setTransfersAllowed(true);
 
     // deploy migrator contract
-    Migrator = await ethers.getContractFactory("RbnToAevoMigrator");
+    Migrator = await ethers.getContractFactory("Migrator");
     migrator = await Migrator.deploy(RBN_ADDR, aevoToken.address);
 
     // owner mints the total AEVO supply to migrator address
@@ -68,14 +68,14 @@ describe("Migrator", function () {
 
   describe("#constructor", function () {
     it("reverts if RBN address is 0", async function () {
-      const TestMigrator = await ethers.getContractFactory("RbnToAevoMigrator");
+      const TestMigrator = await ethers.getContractFactory("Migrator");
 
       await expect(
         TestMigrator.deploy(NULL_ADDR, aevoToken.address)
       ).to.be.revertedWith("!_rbn");
     });
     it("reverts if AEVO address is 0", async function () {
-      const TestMigrator = await ethers.getContractFactory("RbnToAevoMigrator");
+      const TestMigrator = await ethers.getContractFactory("Migrator");
 
       await expect(TestMigrator.deploy(RBN_ADDR, NULL_ADDR)).to.be.revertedWith(
         "!_aevo"

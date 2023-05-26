@@ -11,7 +11,7 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.
  * @notice This contract implements the migration from RBN to AEVO token
  * @author Aevo team
  */
-contract RbnToAevoMigrator is Ownable, ReentrancyGuard {
+contract Migrator is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     /************************************************
