@@ -129,7 +129,9 @@ describe("Migrator", function () {
       assert.bnEqual(userRBNBalBefore.sub(userRBNBalAfter), migrateAmount);
 
       // emits event
-      await expect(tx).to.emit(migrator, "Migrated").withArgs(migrateAmount);
+      await expect(tx)
+        .to.emit(migrator, "Migrated")
+        .withArgs(user, migrateAmount);
     });
   });
 

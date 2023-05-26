@@ -29,7 +29,7 @@ contract Migrator is Ownable {
      ***********************************************/
 
     /// @notice emits an event when there is a migration
-    event Migrated(uint256 amount);
+    event Migrated(address indexed recipient, uint256 amount);
 
     /// @notice emits an event when there is a rescue
     event Rescued(uint256 amount);
@@ -67,7 +67,7 @@ contract Migrator is Ownable {
 
         AEVO.safeTransfer(msg.sender, _amount);
 
-        emit Migrated(_amount);
+        emit Migrated(msg.sender, _amount);
     }
 
     /**
