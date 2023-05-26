@@ -31,7 +31,7 @@ describe("Migrator", function () {
       TOKEN_PARAMS.BENEFICIARY
     );
 
-    // set transfers allowed to true
+    // impersonate beneficiary
     await hre.network.provider.request({
       method: "hardhat_impersonateAccount",
       params: [TOKEN_PARAMS.BENEFICIARY],
@@ -40,8 +40,6 @@ describe("Migrator", function () {
     beneficiarySigner = await ethers.provider.getSigner(
       TOKEN_PARAMS.BENEFICIARY
     );
-
-    await aevoToken.connect(beneficiarySigner).setTransfersAllowed(true);
 
     // deploy migrator contract
     Migrator = await ethers.getContractFactory("Migrator");

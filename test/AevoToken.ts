@@ -64,21 +64,6 @@ describe("Aevo contract", function () {
       ).to.be.false;
     });
 
-    it("Should grant beneficiary transfer rights", async function () {
-      expect(
-        await withSigner.hasRole(
-          await aevoToken.TRANSFER_ROLE(),
-          TOKEN_PARAMS.BENEFICIARY
-        )
-      ).to.be.true;
-    });
-
-    it("Should not grant non-beneficiary any transfer rights", async function () {
-      expect(
-        await withSigner.hasRole(await aevoToken.TRANSFER_ROLE(), addr1.address)
-      ).to.be.false;
-    });
-
     it("Should grant beneficiary admin rights", async function () {
       expect(
         await withSigner.hasRole(
@@ -94,11 +79,11 @@ describe("Aevo contract", function () {
       ).to.be.false;
     });
 
-    it("Admin role of transfer role should be ADMIN_ROLE", async function () {
+/*     it("Admin role of minter role should be ADMIN_ROLE", async function () {
       expect(
-        await withSigner.getRoleAdmin(await aevoToken.TRANSFER_ROLE())
+        await withSigner.getRoleAdmin(await aevoToken.MINTER_ROLE())
       ).to.equal(await aevoToken.ADMIN_ROLE());
-    });
+    }); */
   });
 
   // Test token parameter
@@ -120,10 +105,6 @@ describe("Aevo contract", function () {
 
   // Test minter privileges
   describe("Mintability", function () {
-    beforeEach(async function () {
-      await withSigner.setTransfersAllowed(true);
-    });
-
     it("Should allow the beneficiary to mint", async function () {
       await expect(await withSigner.mint(addr1.address, 50)).to.emit(
         aevoToken,
@@ -150,75 +131,32 @@ describe("Aevo contract", function () {
 
   // Test transfer privileges
   describe("Transferability", function () {
-    it("Should let beneficiary toggle transfer flag", async function () {
-      await withSigner.setTransfersAllowed(true);
-      expect(await withSigner.transfersAllowed()).to.be.true;
-    });
-
-    it("Should let beneficiary toggle transfer flag #2", async function () {
-      await withSigner.setTransfersAllowed(false);
-      expect(await withSigner.transfersAllowed()).to.be.false;
-    });
-
-    it("Should not let non-beneficiary toggle transfer flag", async function () {
-      await expect(
-        aevoToken.connect(addr1).setTransfersAllowed(true)
-      ).to.be.revertedWith("AevoToken: only admin");
-    });
-
-    it("Should not let non-admin to transfer", async function () {
-      await expect(
-        aevoToken.connect(addr1).transfer(owner.address, 1)
-      ).to.be.revertedWith("AevoToken: no transfer privileges");
-    });
-
-    it("Should let non-admin to transfer after toggle switched", async function () {
-      await withSigner.setTransfersAllowed(true);
+    it("Should let non-admin to transfer", async function () {
       await withSigner.mint(addr1.address, 50);
       await aevoToken.connect(addr1).transfer(addr2.address, 50);
-    });
-
-    it("Should not let non-admin to transfer after toggle switched to false", async function () {
-      await withSigner.setTransfersAllowed(false);
-      await withSigner.mint(addr1.address, 50);
-      await expect(
-        aevoToken.connect(addr1).transfer(addr2.address, 50)
-      ).to.be.revertedWith("AevoToken: no transfer privileges");
     });
   });
 
   // Test admin privileges
   describe("Admin", function () {
-    it("Should let admin assign transfer role to another", async function () {
-      await withSigner.grantRole(
-        await aevoToken.TRANSFER_ROLE(),
-        addr1.address
-      );
+/*     it("Should let admin assign minter role to another", async function () {
+      await withSigner.grantRole(await aevoToken.MINTER_ROLE(), addr1.address);
       expect(
-        await withSigner.hasRole(await aevoToken.TRANSFER_ROLE(), addr1.address)
+        await withSigner.hasRole(await aevoToken.MINTER_ROLE(), addr1.address)
       ).to.be.true;
       await withSigner.mint(addr1.address, 50);
-      await aevoToken.connect(addr1).transfer(addr2.address, 50);
     });
 
-    it("Should let admin revoke transfer role from another", async function () {
-      await withSigner.grantRole(
-        await aevoToken.TRANSFER_ROLE(),
-        addr1.address
-      );
-      await withSigner.revokeRole(
-        await aevoToken.TRANSFER_ROLE(),
-        addr1.address
-      );
-      await withSigner.mint(addr1.address, 50);
+    it("Should let admin revoke minter role from another", async function () {
+      await withSigner.grantRole(await aevoToken.MINTER_ROLE(), addr1.address);
+      await withSigner.revokeRole(await aevoToken.MINTER_ROLE(), addr1.address);
       await expect(
-        aevoToken.connect(addr1).transfer(addr2.address, 50)
-      ).to.be.revertedWith("AevoToken: no transfer privileges");
+        aevoToken.connect(addr1).mint(addr1.address, 50)
+      ).to.be.revertedWith("AevoToken: only minter");
       expect(
-        await withSigner.hasRole(await aevoToken.TRANSFER_ROLE(), addr1.address)
+        await withSigner.hasRole(await aevoToken.MINTER_ROLE(), addr1.address)
       ).to.be.false;
-    });
-
+    }); */
     it("Should not let admin assign minter role to another", async function () {
       await expect(
         withSigner.grantRole(await aevoToken.MINTER_ROLE(), addr1.address)
@@ -249,10 +187,6 @@ describe("Aevo contract", function () {
 
   // Test arbitrary aevo token transfer attempts
   describe("Transactions", function () {
-    beforeEach(async function () {
-      await withSigner.setTransfersAllowed(true);
-    });
-
     it("Should transfer tokens between accounts", async function () {
       // mint 50 tokens to owner to make the transfer
       await withSigner.mint(TOKEN_PARAMS.BENEFICIARY, 50);
