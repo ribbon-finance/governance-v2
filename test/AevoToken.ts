@@ -158,11 +158,40 @@ describe("Aevo contract", function () {
         await withSigner.hasRole(await aevoToken.MINTER_ROLE(), addr1.address)
       ).to.be.false;
     });
-/*     it("Should not let admin assign minter role to another", async function () {
+
+    it("Should not let admin mint nor assign minter role to another after renouncing both admin and minter role", async function () {
+      await withSigner.renounceRole(
+        await aevoToken.MINTER_ROLE(),
+        TOKEN_PARAMS.BENEFICIARY
+      );
+
+      await withSigner.renounceRole(
+        await aevoToken.ADMIN_ROLE(),
+        TOKEN_PARAMS.BENEFICIARY
+      );
+
+      expect(
+        await withSigner.hasRole(
+          await aevoToken.MINTER_ROLE(),
+          TOKEN_PARAMS.BENEFICIARY
+        )
+      ).to.be.false;
+
+      expect(
+        await withSigner.hasRole(
+          await aevoToken.ADMIN_ROLE(),
+          TOKEN_PARAMS.BENEFICIARY
+        )
+      ).to.be.false;
+
+      await expect(withSigner.mint(addr1.address, 50)).to.be.revertedWith(
+        "AevoToken: only minter"
+      );
+
       await expect(
         withSigner.grantRole(await aevoToken.MINTER_ROLE(), addr1.address)
       ).to.be.reverted;
-    }); */
+    });
 
     it("Should not let admin assign admin role to another", async function () {
       await expect(
