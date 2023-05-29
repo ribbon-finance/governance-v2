@@ -40,7 +40,7 @@ export default {
         mnemonic: process.env.MAINNET_MNEMONIC,
       },
     },
-    goerli: {
+    /* goerli: {
       url: process.env.GOERLI_URI,
       chainId: 5,
       accounts: {
@@ -53,7 +53,7 @@ export default {
       accounts: {
         mnemonic: process.env.SEPOLIA_MNEMONIC,
       },
-    },
+    }, */
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY,
