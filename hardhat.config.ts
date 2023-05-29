@@ -2,6 +2,7 @@ import "@nomicfoundation/hardhat-toolbox";
 import "solidity-coverage";
 import "hardhat-gas-reporter";
 import { BLOCK_NUMBER } from "./constants/constants";
+import { TEST_URI } from "./scripts/helpers/getDefaultEthersProvider";
 
 require("dotenv").config();
 
@@ -12,6 +13,9 @@ process.env.TEST_MNEMONIC =
 const CHAINID = process.env.CHAINID ? Number(process.env.CHAINID) : 1;
 
 export default {
+  accounts: {
+    mnemonic: process.env.TEST_MNEMONIC,
+  },
   solidity: {
     version: "0.8.18",
     settings: {
@@ -28,7 +32,7 @@ export default {
       },
       chainId: CHAINID,
       forking: {
-        url: process.env.TEST_URI,
+        url: TEST_URI[CHAINID],
         blockNumber: BLOCK_NUMBER[CHAINID],
         gasLimit: 8e6,
       },
