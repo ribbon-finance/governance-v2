@@ -80,11 +80,11 @@ describe("Aevo contract", function () {
       ).to.be.false;
     });
 
-/*     it("Admin role of minter role should be ADMIN_ROLE", async function () {
+    it("Admin role of minter role should be ADMIN_ROLE", async function () {
       expect(
         await withSigner.getRoleAdmin(await aevoToken.MINTER_ROLE())
       ).to.equal(await aevoToken.ADMIN_ROLE());
-    }); */
+    });
   });
 
   // Test token parameter
@@ -140,7 +140,7 @@ describe("Aevo contract", function () {
 
   // Test admin privileges
   describe("Admin", function () {
-/*     it("Should let admin assign minter role to another", async function () {
+    it("Should let admin assign minter role to another", async function () {
       await withSigner.grantRole(await aevoToken.MINTER_ROLE(), addr1.address);
       expect(
         await withSigner.hasRole(await aevoToken.MINTER_ROLE(), addr1.address)
@@ -157,12 +157,12 @@ describe("Aevo contract", function () {
       expect(
         await withSigner.hasRole(await aevoToken.MINTER_ROLE(), addr1.address)
       ).to.be.false;
-    }); */
-    it("Should not let admin assign minter role to another", async function () {
+    });
+/*     it("Should not let admin assign minter role to another", async function () {
       await expect(
         withSigner.grantRole(await aevoToken.MINTER_ROLE(), addr1.address)
       ).to.be.reverted;
-    });
+    }); */
 
     it("Should not let admin assign admin role to another", async function () {
       await expect(

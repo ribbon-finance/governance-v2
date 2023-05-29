@@ -23,7 +23,7 @@ contract Aevo is AccessControl, ERC20Permit {
         // Add beneficiary as admin
         _setupRole(ADMIN_ROLE, beneficiary);
         // Set ADMIN role as admin of minter role
-        //_setRoleAdmin(MINTER_ROLE, ADMIN_ROLE);
+        _setRoleAdmin(MINTER_ROLE, ADMIN_ROLE);
     }
 
     /// @dev A modifier which checks that the caller has the minter role.
