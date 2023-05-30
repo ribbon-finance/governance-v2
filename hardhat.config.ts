@@ -51,13 +51,6 @@ export default {
         mnemonic: process.env.GOERLI_MNEMONIC,
       },
     },
-    sepolia: {
-      url: process.env.SEPOLIA_URI,
-      chainId: 11155111,
-      accounts: {
-        mnemonic: process.env.SEPOLIA_MNEMONIC,
-      },
-    },
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY,
