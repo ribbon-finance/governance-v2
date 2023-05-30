@@ -1,6 +1,9 @@
 const hre = require("hardhat");
-import { AEVO_ADDR, PLACEHOLDER_ADDR, RBN_ADDR } from "../../constants/constants";
-
+import {
+  AEVO_ADDR,
+  PLACEHOLDER_ADDR,
+  RBN_ADDR,
+} from "../../constants/constants";
 
 // WIP - this script is waiting for AEVO token mainnet address
 async function main() {
@@ -10,14 +13,13 @@ async function main() {
   console.log(`\Deploying with ${deployer.address}`);
 
   // We get the contract to deploy
-  const Migrator = await hre.ethers.getContractFactory(
-    "Migrator",
-    deployer
-  );
+  const Migrator = await hre.ethers.getContractFactory("Migrator", deployer);
 
   // Use a different address for obfuscation just in case anyone's watching
   const AEVO_ADDRESS =
-    network === "goerli" || network === "sepolia" ? PLACEHOLDER_ADDR : AEVO_ADDR;
+    network === "goerli" || network === "sepolia"
+      ? PLACEHOLDER_ADDR
+      : AEVO_ADDR;
   const RBN_ADDRESS =
     network === "goerli" || network === "sepolia" ? PLACEHOLDER_ADDR : RBN_ADDR;
 

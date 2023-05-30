@@ -9,10 +9,16 @@ async function main() {
   const AevoToken = await hre.ethers.getContractFactory("Aevo", deployer);
 
   // Use a different name for obfuscation just in case anyone's watching
-  const name = network === "goerli" || network === "sepolia" ? "TestToken" : TOKEN_PARAMS.NAME;
-  const symbol = network === "goerli" || network === "sepolia" ? "TT" : TOKEN_PARAMS.SYMBOL;
+  const name =
+    network === "goerli" || network === "sepolia"
+      ? "TestToken"
+      : TOKEN_PARAMS.NAME;
+  const symbol =
+    network === "goerli" || network === "sepolia" ? "TT" : TOKEN_PARAMS.SYMBOL;
   const beneficiary =
-    network === "goerli" || network === "sepolia" ? deployer.address : TOKEN_PARAMS.BENEFICIARY;
+    network === "goerli" || network === "sepolia"
+      ? deployer.address
+      : TOKEN_PARAMS.BENEFICIARY;
 
   console.log("name", name);
   console.log("symbol", symbol);
@@ -27,7 +33,6 @@ async function main() {
   );
 
   await aevoToken.deployTransaction.wait(5);
-
 
   await hre.run("verify:verify", {
     address: aevoToken.address,
