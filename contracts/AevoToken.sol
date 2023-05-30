@@ -20,7 +20,7 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 
 /**
  * @title Aevo Token
- * @notice Governance token of the Aevo exchange, Aevo structured products, and Aevo L2
+ * @notice Governance token of the Aevo exchange and rollup
  * @dev ERC20 in addition to:
  *        - EIP-2612 signed approval implementation
  *        - `mint` functionality by DAO  
