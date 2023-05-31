@@ -5,7 +5,7 @@ import {
   RBN_ADDR,
 } from "../../constants/constants";
 
-// WIP - this script is waiting for AEVO token mainnet address
+
 async function main() {
   const [deployer] = await hre.ethers.getSigners();
   const network = hre.network.name;
