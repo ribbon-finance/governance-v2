@@ -1,7 +1,7 @@
 const {TEST_BENEFICIARY, DAO_MULTISIG} = require("./constants/constants");
 
 const isTest = process.env.CI;
-const beneficiary = isTest ? TEST_BENEFICIARY : DAO_MULTISIG;
+const beneficiary = isTest ? DAO_MULTISIG : DAO_MULTISIG;
 
 // FOR MAINNET
 const TOKEN_PARAMS = {
