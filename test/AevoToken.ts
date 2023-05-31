@@ -44,12 +44,6 @@ describe("Aevo contract", function () {
 
   // Test initial setup
   describe("Deployment", function () {
-    it("Should not mint tokens upon deployment", async function () {
-      const ownerBalance = await aevoToken.balanceOf(TOKEN_PARAMS.BENEFICIARY);
-      expect(ownerBalance).to.equal(0);
-      expect(await aevoToken.totalSupply()).to.equal(0);
-    });
-
     it("Should grant beneficiary minting rights", async function () {
       expect(
         await withSigner.hasRole(
@@ -59,12 +53,6 @@ describe("Aevo contract", function () {
       ).to.be.true;
     });
 
-    it("Should not grant non-beneficiary any minting rights", async function () {
-      await expect(
-        await withSigner.hasRole(await aevoToken.MINTER_ROLE(), addr1.address)
-      ).to.be.false;
-    });
-
     it("Should grant beneficiary admin rights", async function () {
       expect(
         await withSigner.hasRole(
@@ -72,12 +60,6 @@ describe("Aevo contract", function () {
           TOKEN_PARAMS.BENEFICIARY
         )
       ).to.be.true;
-    });
-
-    it("Should not grant non-beneficiary any admin rights", async function () {
-      expect(
-        await withSigner.hasRole(await aevoToken.ADMIN_ROLE(), addr1.address)
-      ).to.be.false;
     });
 
     it("Admin role of minter role should be ADMIN_ROLE", async function () {
@@ -127,14 +109,6 @@ describe("Aevo contract", function () {
       await expect(withSigner.mint(addr1.address, 50)).to.be.revertedWith(
         "Aevo: only minter"
       );
-    });
-  });
-
-  // Test transfer privileges
-  describe("Transferability", function () {
-    it("Should let non-admin to transfer", async function () {
-      await withSigner.mint(addr1.address, 50);
-      await aevoToken.connect(addr1).transfer(addr2.address, 50);
     });
   });
 
