@@ -5,7 +5,6 @@ import {
   RBN_ADDR,
 } from "../../constants/constants";
 
-
 async function main() {
   const [deployer] = await hre.ethers.getSigners();
   const network = hre.network.name;

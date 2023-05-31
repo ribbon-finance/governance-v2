@@ -4,7 +4,7 @@ import { BigNumber, Contract, ContractFactory, Wallet } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { generateWallet, getPermitSignature } from "./helpers/utils";
 
-const { TOKEN_PARAMS } = require("../params");
+import { TOKEN_PARAMS } from "../constants/constants";
 
 describe("Aevo contract", function () {
   let AevoToken: ContractFactory;

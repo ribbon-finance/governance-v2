@@ -2,11 +2,9 @@ import { expect } from "chai";
 import hre, { ethers } from "hardhat";
 import { BigNumber, Contract, ContractFactory, Signer } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
-import { NULL_ADDR, RBN_ADDR } from "../constants/constants";
+import { NULL_ADDR, RBN_ADDR, TOKEN_PARAMS } from "../constants/constants";
 import { assert } from "./helpers/assertions";
 const { parseEther } = ethers.utils;
-
-const { TOKEN_PARAMS } = require("../params");
 
 describe("Migrator", function () {
   let AevoToken: ContractFactory;
