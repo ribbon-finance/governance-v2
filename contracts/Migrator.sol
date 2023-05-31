@@ -6,7 +6,7 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /**
- * @title RbnToAevoMigrator
+ * @title RBN to AEVO Migrator
  * @notice This contract implements the migration from RBN to AEVO token
  * @author Aevo team
  */
