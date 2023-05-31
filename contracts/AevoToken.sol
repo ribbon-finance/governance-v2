@@ -44,16 +44,12 @@ contract Aevo is AccessControl, ERC20Permit {
         _setRoleAdmin(MINTER_ROLE, ADMIN_ROLE);
     }
 
-    /// @dev A modifier which checks that the caller has the minter role.
-    modifier onlyMinter() {
-        require(hasRole(MINTER_ROLE, msg.sender), "AevoToken: only minter");
-        _;
-    }
-
     /// @dev Mints tokens to a recipient.
     ///
     /// This function reverts if the caller does not have the minter role.
-    function mint(address _recipient, uint256 _amount) external onlyMinter {
+    function mint(address _recipient, uint256 _amount) external {
+        require(hasRole(MINTER_ROLE, msg.sender), "Aevo: only minter");
+
         _mint(_recipient, _amount);
     }
 }

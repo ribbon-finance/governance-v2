@@ -115,7 +115,7 @@ describe("Aevo contract", function () {
 
     it("Should revert mint attempts by non-minter", async function () {
       await expect(aevoToken.mint(addr1.address, 50)).to.be.revertedWith(
-        "AevoToken: only minter"
+        "Aevo: only minter"
       );
     });
 
@@ -125,7 +125,7 @@ describe("Aevo contract", function () {
         TOKEN_PARAMS.BENEFICIARY
       );
       await expect(withSigner.mint(addr1.address, 50)).to.be.revertedWith(
-        "AevoToken: only minter"
+        "Aevo: only minter"
       );
     });
   });
@@ -153,7 +153,7 @@ describe("Aevo contract", function () {
       await withSigner.revokeRole(await aevoToken.MINTER_ROLE(), addr1.address);
       await expect(
         aevoToken.connect(addr1).mint(addr1.address, 50)
-      ).to.be.revertedWith("AevoToken: only minter");
+      ).to.be.revertedWith("Aevo: only minter");
       expect(
         await withSigner.hasRole(await aevoToken.MINTER_ROLE(), addr1.address)
       ).to.be.false;
@@ -185,7 +185,7 @@ describe("Aevo contract", function () {
       ).to.be.false;
 
       await expect(withSigner.mint(addr1.address, 50)).to.be.revertedWith(
-        "AevoToken: only minter"
+        "Aevo: only minter"
       );
 
       await expect(
