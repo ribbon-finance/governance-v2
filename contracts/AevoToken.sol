@@ -23,7 +23,7 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
  * @notice Governance token of the Aevo exchange and rollup
  * @dev ERC20 in addition to:
  *        - EIP-2612 signed approval implementation
- *        - `mint` functionality by DAO  
+ *        - `mint` functionality by Aevo DAO  
  */
 contract Aevo is AccessControl, ERC20Permit {
     /// @dev The identifier of the role which maintains other roles.
