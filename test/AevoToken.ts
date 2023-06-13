@@ -5,7 +5,7 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { generateWallet, getPermitSignature } from "./helpers/utils";
 import { assert } from "./helpers/assertions";
 
-import { NULL_ADDR, RBN_ADDR, TOKEN_PARAMS } from "../constants/constants";
+import { RBN_ADDR, TOKEN_PARAMS } from "../constants/constants";
 
 describe("Aevo contract", function () {
   let AevoToken: ContractFactory;
@@ -24,8 +24,7 @@ describe("Aevo contract", function () {
     aevoToken = await AevoToken.deploy(
       TOKEN_PARAMS.NAME,
       TOKEN_PARAMS.SYMBOL,
-      TOKEN_PARAMS.BENEFICIARY,
-      RBN_ADDR
+      TOKEN_PARAMS.BENEFICIARY
     );
 
     await aevoToken.deployed();
@@ -50,17 +49,6 @@ describe("Aevo contract", function () {
 
   // Test initial setup
   describe("Deployment", function () {
-    it("Should revert if RBN address is 0", async function () {
-      await expect(AevoToken.deploy(
-        TOKEN_PARAMS.NAME,
-        TOKEN_PARAMS.SYMBOL,
-        TOKEN_PARAMS.BENEFICIARY,
-        NULL_ADDR
-      )).to.be.revertedWith(
-        "Aevo: RBN address cannot be 0"
-      );
-    });
-
     it("Should grant beneficiary minting rights", async function () {
       expect(
         await withSigner.hasRole(
@@ -347,7 +335,7 @@ describe("Aevo contract", function () {
       await expect(aevoToken.rescue()).to.be.revertedWith("Aevo: amount cannot be 0");
     });
 
-    it("User calls rescue and successfully moves the RBN tokens to the owner after accidentally sending them to contract", async function () {
+    it("User calls rescue and successfully moves the RBN tokens to the beneficiary after accidentally sending them to contract", async function () {
       const accidentalAmount = BigNumber.from("10000").mul(
         BigNumber.from("10").pow(18)
       );            
@@ -366,7 +354,7 @@ describe("Aevo contract", function () {
       
       const userRBNBalBefore = await rbnToken.balanceOf(addr1.address);
       const aevoTokenRBNBalBefore = await rbnToken.balanceOf(aevoToken.address);
-      const ownerRBNBalBefore = await rbnToken.balanceOf(owner.address);
+      const beneficiaryRBNBalBefore = await rbnToken.balanceOf(TOKEN_PARAMS.BENEFICIARY);
 
       // acidentally user sends RBN to contract
       await rbnToken
@@ -379,12 +367,12 @@ describe("Aevo contract", function () {
       );
 
       // user calls rescue
-      const tx = await aevoToken.connect(addr1).rescue();
+      await aevoToken.connect(addr1).rescue();
 
-      const ownerRBNBalAfter = await rbnToken.balanceOf(owner.address);
+      const beneficiaryRBNBalAfter = await rbnToken.balanceOf(TOKEN_PARAMS.BENEFICIARY);
       const aevoTokenRBNBalAfter = await rbnToken.balanceOf(aevoToken.address);
 
-      assert.bnEqual(ownerRBNBalAfter.sub(ownerRBNBalBefore), accidentalAmount);
+      assert.bnEqual(beneficiaryRBNBalAfter.sub(beneficiaryRBNBalBefore), accidentalAmount);
       assert.bnEqual(
         aevoTokenRBNBalPostAccident.sub(aevoTokenRBNBalBefore),
         accidentalAmount
@@ -397,9 +385,6 @@ describe("Aevo contract", function () {
         userRBNBalBefore.sub(userRBNBalPostAccident),
         accidentalAmount
       );
-
-      // emits event
-      await expect(tx).to.emit(aevoToken, "Rescued").withArgs(accidentalAmount);
     });
   });
 });
