@@ -1,5 +1,5 @@
 const hre = require("hardhat");
-import { TOKEN_PARAMS, RBN_ADDR } from "../../constants/constants";
+import { TOKEN_PARAMS } from "../../constants/constants";
 
 async function main() {
   const [deployer] = await hre.ethers.getSigners();
@@ -24,7 +24,7 @@ async function main() {
   console.log("symbol", symbol);
   console.log("beneficiary", beneficiary);
 
-  const aevoToken = await AevoToken.deploy(name, symbol, beneficiary, RBN_ADDR);
+  const aevoToken = await AevoToken.deploy(name, symbol, beneficiary);
 
   await aevoToken.deployed();
 
@@ -36,7 +36,7 @@ async function main() {
 
   await hre.run("verify:verify", {
     address: aevoToken.address,
-    constructorArguments: [name, symbol, beneficiary, RBN_ADDR],
+    constructorArguments: [name, symbol, beneficiary],
   });
 }
 
