@@ -76,6 +76,7 @@ contract Migrator is Ownable {
      */
     function rescue() external {
         uint256 amount = RBN.balanceOf(address(this));
+        require(amount > 0, "!_amount");
 
         RBN.safeTransfer(owner(), amount);
 

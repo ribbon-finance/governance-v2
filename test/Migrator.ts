@@ -132,21 +132,8 @@ describe("Migrator", function () {
   });
 
   describe("#rescue", function () {
-    it("user calls rescue without any RBN in the contract and no changes occur", async function () {
-      const migratorRBNBalBefore = await rbnToken.balanceOf(migrator.address);
-      const ownerRBNBalBefore = await rbnToken.balanceOf(owner.address);
-
-      // user calls rescue
-      const tx = await migrator.connect(userSigner).rescue();
-
-      const ownerRBNBalAfter = await rbnToken.balanceOf(owner.address);
-      const migratorRBNBalAfter = await rbnToken.balanceOf(migrator.address);
-
-      assert.equal(ownerRBNBalAfter.sub(ownerRBNBalBefore), 0);
-      assert.equal(migratorRBNBalAfter.sub(migratorRBNBalBefore), 0);
-
-      // emits event
-      await expect(tx).to.emit(migrator, "Rescued").withArgs(0);
+    it("reverts if user calls rescue without any RBN in the contract", async function () {
+      await expect(migrator.rescue()).to.be.revertedWith("!_amount");
     });
     it("user calls rescue and successfully moves the RBN tokens to the owner after accidentally sending them to contract", async function () {
       const userRBNBalBefore = await rbnToken.balanceOf(user);
