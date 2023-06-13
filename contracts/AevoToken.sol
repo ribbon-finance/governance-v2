@@ -17,6 +17,9 @@ pragma solidity 0.8.18;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /**
  * @title Aevo Token
@@ -25,24 +28,57 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
  *        - EIP-2612 signed approval implementation
  *        - `mint` functionality by Aevo DAO  
  */
-contract Aevo is AccessControl, ERC20Permit {
+contract Aevo is AccessControl, ERC20Permit, Ownable {
+    using SafeERC20 for IERC20;
+
+    /************************************************
+     * INTERFACES
+     ***********************************************/
+
+    ///@notice RBN token interface
+    IERC20 public immutable RBN;
+
+    /************************************************
+     *  EVENTS
+     ***********************************************/
+
+    /// @notice emits an event when there is a rescue
+    event Rescued(uint256 amount);
+
+    /************************************************
+     *  STORAGE
+     ***********************************************/
+
     /// @dev The identifier of the role which maintains other roles.
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN");
     /// @dev The identifier of the role which allows accounts to mint tokens.
     bytes32 public constant MINTER_ROLE = keccak256("MINTER");
 
+    /************************************************
+     *  CONSTRUCTOR
+     ***********************************************/
+
     constructor(
         string memory name,
         string memory symbol,
-        address beneficiary
+        address beneficiary,
+        IERC20 _rbn
     ) ERC20Permit(name) ERC20(name, symbol) {
+        require(address(_rbn) != address(0), "Aevo: RBN address cannot be 0");
+
         // Add beneficiary as minter
         _setupRole(MINTER_ROLE, beneficiary);
         // Add beneficiary as admin
         _setupRole(ADMIN_ROLE, beneficiary);
         // Set ADMIN role as admin of minter role
         _setRoleAdmin(MINTER_ROLE, ADMIN_ROLE);
+
+        RBN = _rbn;
     }
+
+    /************************************************
+     *  TOKEN OPERATIONS
+     ***********************************************/
 
     /// @dev Mints tokens to a recipient.
     ///
@@ -51,5 +87,17 @@ contract Aevo is AccessControl, ERC20Permit {
         require(hasRole(MINTER_ROLE, msg.sender), "Aevo: only minter");
 
         _mint(_recipient, _amount);
+    }
+
+    /// @notice sends Aevo token contract's RBN balance to its owner
+    ///         to be used in case RBN holders accidentally send RBN
+    ///         to this contract
+    function rescue() external {
+        uint256 amount = RBN.balanceOf(address(this));
+        require(amount > 0, "Aevo: amount cannot be 0");
+
+        RBN.safeTransfer(owner(), amount);
+
+        emit Rescued(amount);
     }
 }

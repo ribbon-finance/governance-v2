@@ -3,12 +3,14 @@ import hre, { ethers } from "hardhat";
 import { BigNumber, Contract, ContractFactory, Wallet } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { generateWallet, getPermitSignature } from "./helpers/utils";
+import { assert } from "./helpers/assertions";
 
-import { TOKEN_PARAMS } from "../constants/constants";
+import { NULL_ADDR, RBN_ADDR, TOKEN_PARAMS } from "../constants/constants";
 
 describe("Aevo contract", function () {
   let AevoToken: ContractFactory;
   let aevoToken: Contract;
+  let rbnToken: Contract;
   let owner: SignerWithAddress;
   let addr1: SignerWithAddress;
   let addr2: SignerWithAddress;
@@ -22,7 +24,8 @@ describe("Aevo contract", function () {
     aevoToken = await AevoToken.deploy(
       TOKEN_PARAMS.NAME,
       TOKEN_PARAMS.SYMBOL,
-      TOKEN_PARAMS.BENEFICIARY
+      TOKEN_PARAMS.BENEFICIARY,
+      RBN_ADDR
     );
 
     await aevoToken.deployed();
@@ -40,10 +43,24 @@ describe("Aevo contract", function () {
     const signer = await ethers.provider.getSigner(TOKEN_PARAMS.BENEFICIARY);
     let token = await ethers.getContractAt("Aevo", aevoToken.address);
     withSigner = await token.connect(signer);
+
+    // set up RBN contract
+    rbnToken = await ethers.getContractAt("IERC20", RBN_ADDR);
   });
 
   // Test initial setup
   describe("Deployment", function () {
+    it("Should revert if RBN address is 0", async function () {
+      await expect(AevoToken.deploy(
+        TOKEN_PARAMS.NAME,
+        TOKEN_PARAMS.SYMBOL,
+        TOKEN_PARAMS.BENEFICIARY,
+        NULL_ADDR
+      )).to.be.revertedWith(
+        "Aevo: RBN address cannot be 0"
+      );
+    });
+
     it("Should grant beneficiary minting rights", async function () {
       expect(
         await withSigner.hasRole(
@@ -322,6 +339,67 @@ describe("Aevo contract", function () {
 
       expect(addr2BalAfter.sub(addr2BalBefore)).to.equal(permitAmount);
       expect(addr1BalBefore.sub(addr1BalAfter)).to.equal(permitAmount);
+    });
+  });
+
+  describe("#rescue", function () {
+    it("Should revert if user calls rescue without any RBN in the contract", async function () {
+      await expect(aevoToken.rescue()).to.be.revertedWith("Aevo: amount cannot be 0");
+    });
+
+    it("User calls rescue and successfully moves the RBN tokens to the owner after accidentally sending them to contract", async function () {
+      const accidentalAmount = BigNumber.from("10000").mul(
+        BigNumber.from("10").pow(18)
+      );            
+      
+      // fund user with RBN
+      const user = "0xaddfB9a442a32225d866ffdB983AaB115199e662";
+      await hre.network.provider.request({
+        method: "hardhat_impersonateAccount",
+        params: [user],
+      });
+      const userSigner = await ethers.provider.getSigner(user);
+      
+      await rbnToken
+      .connect(userSigner)
+      .transfer(addr1.address, accidentalAmount);
+      
+      const userRBNBalBefore = await rbnToken.balanceOf(addr1.address);
+      const aevoTokenRBNBalBefore = await rbnToken.balanceOf(aevoToken.address);
+      const ownerRBNBalBefore = await rbnToken.balanceOf(owner.address);
+
+      // acidentally user sends RBN to contract
+      await rbnToken
+        .connect(addr1)
+        .transfer(aevoToken.address, accidentalAmount);
+
+      const userRBNBalPostAccident = await rbnToken.balanceOf(addr1.address);
+      const aevoTokenRBNBalPostAccident = await rbnToken.balanceOf(
+        aevoToken.address
+      );
+
+      // user calls rescue
+      const tx = await aevoToken.connect(addr1).rescue();
+
+      const ownerRBNBalAfter = await rbnToken.balanceOf(owner.address);
+      const aevoTokenRBNBalAfter = await rbnToken.balanceOf(aevoToken.address);
+
+      assert.bnEqual(ownerRBNBalAfter.sub(ownerRBNBalBefore), accidentalAmount);
+      assert.bnEqual(
+        aevoTokenRBNBalPostAccident.sub(aevoTokenRBNBalBefore),
+        accidentalAmount
+      );
+       assert.bnEqual(
+        aevoTokenRBNBalPostAccident.sub(aevoTokenRBNBalAfter),
+        accidentalAmount
+      ); 
+      assert.bnEqual(
+        userRBNBalBefore.sub(userRBNBalPostAccident),
+        accidentalAmount
+      );
+
+      // emits event
+      await expect(tx).to.emit(aevoToken, "Rescued").withArgs(accidentalAmount);
     });
   });
 });
