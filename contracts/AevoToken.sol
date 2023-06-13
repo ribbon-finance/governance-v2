@@ -67,9 +67,9 @@ contract Aevo is AccessControl, ERC20Permit, Ownable {
         require(address(_rbn) != address(0), "Aevo: RBN address cannot be 0");
 
         // Add beneficiary as minter
-        _setupRole(MINTER_ROLE, beneficiary);
+        _grantRole(MINTER_ROLE, beneficiary);
         // Add beneficiary as admin
-        _setupRole(ADMIN_ROLE, beneficiary);
+        _grantRole(ADMIN_ROLE, beneficiary);
         // Set ADMIN role as admin of minter role
         _setRoleAdmin(MINTER_ROLE, ADMIN_ROLE);
 
