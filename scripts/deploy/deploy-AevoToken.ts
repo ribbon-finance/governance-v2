@@ -1,5 +1,5 @@
 const hre = require("hardhat");
-import { TOKEN_PARAMS } from "../constants/constants";
+import { TOKEN_PARAMS } from "../../constants/constants";
 
 async function main() {
   const [deployer] = await hre.ethers.getSigners();
