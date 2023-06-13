@@ -26,8 +26,7 @@ describe("Migrator", function () {
     aevoToken = await AevoToken.deploy(
       TOKEN_PARAMS.NAME,
       TOKEN_PARAMS.SYMBOL,
-      TOKEN_PARAMS.BENEFICIARY,
-      RBN_ADDR
+      TOKEN_PARAMS.BENEFICIARY
     );
 
     // impersonate beneficiary
