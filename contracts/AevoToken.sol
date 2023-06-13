@@ -11,14 +11,13 @@
                                                              888                                888                                                                  
                                                         Y8b d88P                                888                                                                  
                                                          "Y88P"                                 888 
-*/ 
+*/
 
 pragma solidity 0.8.18;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /**
@@ -26,32 +25,25 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
  * @notice Governance token of the Aevo exchange and rollup
  * @dev ERC20 in addition to:
  *        - EIP-2612 signed approval implementation
- *        - `mint` functionality by Aevo DAO  
+ *        - `mint` functionality by Aevo DAO
  */
-contract Aevo is AccessControl, ERC20Permit, Ownable {
+contract Aevo is AccessControl, ERC20Permit {
     using SafeERC20 for IERC20;
 
     /************************************************
-     * INTERFACES
+     *  IMMUTABLES AND CONSTANTS 
      ***********************************************/
 
-    ///@notice RBN token interface
-    IERC20 public immutable RBN;
+    /// @notice Beneficiary address
+    address private immutable beneficiary;
 
-    /************************************************
-     *  EVENTS
-     ***********************************************/
+    /// @notice RBN 0x6123B0049F904d730dB3C36a31167D9d4121fA6B
+    address public constant RBN = 0x6123B0049F904d730dB3C36a31167D9d4121fA6B;
 
-    /// @notice emits an event when there is a rescue
-    event Rescued(uint256 amount);
-
-    /************************************************
-     *  STORAGE
-     ***********************************************/
-
-    /// @dev The identifier of the role which maintains other roles.
+    /// @notice The identifier of the role which maintains other roles
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN");
-    /// @dev The identifier of the role which allows accounts to mint tokens.
+
+    /// @notice The identifier of the role which allows accounts to mint tokens
     bytes32 public constant MINTER_ROLE = keccak256("MINTER");
 
     /************************************************
@@ -61,43 +53,39 @@ contract Aevo is AccessControl, ERC20Permit, Ownable {
     constructor(
         string memory name,
         string memory symbol,
-        address beneficiary,
-        IERC20 _rbn
+        address _beneficiary
     ) ERC20Permit(name) ERC20(name, symbol) {
-        require(address(_rbn) != address(0), "Aevo: RBN address cannot be 0");
-
         // Add beneficiary as minter
-        _grantRole(MINTER_ROLE, beneficiary);
+        _grantRole(MINTER_ROLE, _beneficiary);
         // Add beneficiary as admin
-        _grantRole(ADMIN_ROLE, beneficiary);
+        _grantRole(ADMIN_ROLE, _beneficiary);
         // Set ADMIN role as admin of minter role
         _setRoleAdmin(MINTER_ROLE, ADMIN_ROLE);
 
-        RBN = _rbn;
+        beneficiary = _beneficiary;
     }
 
     /************************************************
      *  TOKEN OPERATIONS
      ***********************************************/
 
-    /// @dev Mints tokens to a recipient.
-    ///
-    /// This function reverts if the caller does not have the minter role.
+    /// @notice Mints tokens to a recipient
+    ///         This function reverts if the caller does not have the minter role
     function mint(address _recipient, uint256 _amount) external {
         require(hasRole(MINTER_ROLE, msg.sender), "Aevo: only minter");
 
         _mint(_recipient, _amount);
     }
 
-    /// @notice sends Aevo token contract's RBN balance to its owner
+    /// @notice Sends Aevo token contract's RBN balance to its beneficiary
     ///         to be used in case RBN holders accidentally send RBN
     ///         to this contract
     function rescue() external {
-        uint256 amount = RBN.balanceOf(address(this));
+        IERC20 rbn = IERC20(RBN);
+
+        uint256 amount = rbn.balanceOf(address(this));
         require(amount > 0, "Aevo: amount cannot be 0");
 
-        RBN.safeTransfer(owner(), amount);
-
-        emit Rescued(amount);
+        rbn.safeTransfer(beneficiary, amount);
     }
 }
